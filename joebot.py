@@ -31,9 +31,13 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = discord.Client()
 #connect to reddit-------------------------
+CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
+CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET')
+REDDIT_USERNAME = os.getenv('joe_chat_bot')
+REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
 reddit = praw.Reddit(user_agent="Comment Extraction (by /u/Robert_Arctor)",
-                     client_id="CLIENT_ID", client_secret="CLIENT_SECRET",
-                     username="USERNAME", password="PASSWORD")
+                     client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
+                     username=REDDIT_USERNAME, password=REDDIT_PASSWORD)
 #commands----------------------------------
 name = "@joebot"
 #------------------------------------------
@@ -62,7 +66,7 @@ def yt_comment_lookup(text):#finds a youtube comment based on a search using the
         with closing(Chrome(options=chrome_options)) as driver:
             wait = WebDriverWait(driver,10)
             driver.get(yt_video_url)
-            for item in range(6): #wait time for comment finding. larger numbers slow the bot down
+            for item in range(3): #wait time for comment finding. larger numbers slow the bot down
                 wait.until(EC.visibility_of_element_located((By.TAG_NAME, "body"))).send_keys(Keys.END)
                 print(item+1, "seconds waited for content")
                 time.sleep(1)
