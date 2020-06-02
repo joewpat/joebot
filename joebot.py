@@ -26,18 +26,20 @@ from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 
 #connect to discord------------------------
-#from dotenv import load_dotenv
-
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = discord.Client()
+#connect to reddit-------------------------
+reddit = praw.Reddit(user_agent="Comment Extraction (by /u/Robert_Arctor)",
+                     client_id="CLIENT_ID", client_secret="CLIENT_SECRET",
+                     username="USERNAME", password="PASSWORD")
 #commands----------------------------------
 name = "@joebot"
 #------------------------------------------
 
 #function time
 def yt_comment_lookup(text):#finds a youtube comment based on a search using the text parameter
-    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using good ole regex
+    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex
     query = urllib.parse.quote(textToSearch)
     url = "https://www.youtube.com/results?search_query=" + query
     response = urllib.request.urlopen(url)
@@ -81,6 +83,8 @@ def generate_meme():
     pass
 
 
+
+
 def google_search(text):#google search
         #query = command.split(' ', 1)[1]#strip the command word out of the query
         print(text)
@@ -100,9 +104,6 @@ def generate_asip_quote():
 def generate_response(text):
     if text == "hi":
         return 'hi'
-    elif text.startswith('define'):
-        response = dictionary_lookup(text)
-        return response
     elif text.startswith('find'):
         response = google_search(text)
         return response        
