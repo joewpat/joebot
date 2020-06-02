@@ -13,6 +13,7 @@ import sys
 import subprocess
 import json
 import discord
+import praw
 from dotenv import load_dotenv
 from googlesearch import search
 from selenium.webdriver import Chrome
