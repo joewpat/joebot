@@ -59,7 +59,7 @@ def yt_comment_lookup(text):#finds a youtube comment based on a search using the
         with closing(Chrome(options=chrome_options)) as driver:
             wait = WebDriverWait(driver,10)
             driver.get(yt_video_url)
-            for item in range(6): #by increasing the highest range you can get more content
+            for item in range(6): #wait time for comment finding. larger numbers slow the bot down
                 wait.until(EC.visibility_of_element_located((By.TAG_NAME, "body"))).send_keys(Keys.END)
                 print(item+1, "seconds waited for content")
                 time.sleep(1)

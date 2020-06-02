@@ -18,5 +18,6 @@ RUN pip3 install --disable-pip-version-check chromedriver
 RUN pip3 install --disable-pip-version-check selenium
 RUN pip3 install --disable-pip-version-check discord
 RUN pip3 install --disable-pip-version-check python-dotenv
+RUN pip3 install --disable-pip-version-check praw
 #run the bot
 CMD [ "python3","-u","./joebot.py" ]
