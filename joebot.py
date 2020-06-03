@@ -34,12 +34,11 @@ client = discord.Client()
 #connect to reddit-------------------------
 CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
 CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET')
-REDDIT_USERNAME = os.getenv('joe_chat_bot')
+REDDIT_USERNAME = 'joe_chat_bot'
 REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
 REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT')
 reddit = praw.Reddit(user_agent=REDDIT_USER_AGENT,
-                     client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
-                     username=REDDIT_USERNAME, password=REDDIT_PASSWORD)
+                     client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 #commands----------------------------------
 name = "@joebot"
 #------------------------------------------
@@ -150,7 +149,7 @@ if __name__ == "__main__":
     async def on_message(message):
         if message.content.startswith('jb '):
             async with message.channel.typing():
-                response = await generate_response(message.content[3:])
+                response = generate_response(message.content[3:])
                 await message.channel.send(response)
         elif message.content == 'raise-exception':
             raise discord.DiscordException
