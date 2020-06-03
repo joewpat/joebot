@@ -25,6 +25,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
+from praw.models import MoreComments
 
 #connect to discord------------------------
 load_dotenv()
@@ -35,33 +36,52 @@ CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
 CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET')
 REDDIT_USERNAME = os.getenv('joe_chat_bot')
 REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
-reddit = praw.Reddit(user_agent="Comment Extraction (by /u/Robert_Arctor)",
+REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT')
+reddit = praw.Reddit(user_agent=REDDIT_USER_AGENT,
                      client_id=CLIENT_ID, client_secret=CLIENT_SECRET,
                      username=REDDIT_USERNAME, password=REDDIT_PASSWORD)
 #commands----------------------------------
 name = "@joebot"
 #------------------------------------------
 
-#function time
+#functions---------------------------------
+#reddit content gatherer-------------------
+def reddit_comment_search(text):
+    subreddit = reddit.subreddit("all")#use subreddit 'all' to cast a wide net
+    comment_list = []#create empty comment list
+    limit = 15 #by modifying this number we can increase or decrease the amount of comments gathered
+    index = 0#create index to add limit to comment gathering. otherwise it takes too long
+    for submission in subreddit.search(text,limit=3):
+      for top_level_comment in submission.comments:
+        if isinstance(top_level_comment, MoreComments):#skip over non-top level comments. the goal is to be somewhat relevant
+            continue
+        index += 1 #add to index
+        comment_list.append(top_level_comment.body)#add comment bodies to a huge list of random comments
+        if index == limit:
+            break
+    answer = random.choice(comment_list)#returns a random comment from the search
+    print(answer)#prints to console for logging purposes
+    return answer
+
+
 def yt_comment_lookup(text):#finds a youtube comment based on a search using the text parameter
-    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex
-    query = urllib.parse.quote(textToSearch)
+    query = urllib.parse.quote(text)
     url = "https://www.youtube.com/results?search_query=" + query
     response = urllib.request.urlopen(url)
     html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
-    url_list = ['https://www.youtube.com/watch?v=ythwlZ5yceI']
+    url_list = ['https://www.youtube.com/watch?v=ythwlZ5yceI']#set a default video as the base url list for youtube in case nothing gets found
     for vid in soup.findAll(attrs={'class':'yt-uix-tile-link'}):
         url = ('https://www.youtube.com' + vid['href'])
         url_list.append(url)
     yt_video_url = random.choice(url_list)
     #run chromium as background task to pull comments
     chrome_options = Options()  
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    comment_list = []
-    print('attempting youtube lookup of search: ', textToSearch)
+    chrome_options.add_argument("--headless")#opens chrome with no gui
+    chrome_options.add_argument("--no-sandbox")#not sure why I need this
+    chrome_options.add_argument("--disable-dev-shm-usage")#or this
+    comment_list = []#create empty comment list to add things to
+    print('attempting youtube lookup of search: ', text)
     try:
         with closing(Chrome(options=chrome_options)) as driver:
             wait = WebDriverWait(driver,10)
@@ -107,14 +127,19 @@ def generate_asip_quote():
     return y
 
 def generate_response(text):
-    if text == "hi":
+    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex
+    if textToSearch == "hi":
         return 'hi'
-    elif text.startswith('find'):
+    elif textToSearch.startswith('find'):
         response = google_search(text)
         return response        
     else:
-        response = yt_comment_lookup(text)
-        return response
+        #decide if it will be reddit or youtube
+        response = []#create a list of final respnses to choose from
+        #response.append(yt_comment_lookup(text)) disabled youtube until I can quickify it
+        response.append(reddit_comment_search(text))
+        response.append(generate_asip_quote())
+        return random.choice(response)
 
 #main
 if __name__ == "__main__":
