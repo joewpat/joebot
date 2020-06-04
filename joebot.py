@@ -39,23 +39,20 @@ REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
 REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT')
 reddit = praw.Reddit(user_agent=REDDIT_USER_AGENT,
                      client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-#commands----------------------------------
-name = "@joebot"
-#------------------------------------------
 
 #functions---------------------------------
 #reddit content gatherer-------------------
 def reddit_comment_search(text):
     subreddit = reddit.subreddit("all")#use subreddit 'all' to cast a wide net
     comment_list = []#create empty comment list
-    limit = 15 #by modifying this number we can increase or decrease the amount of comments gathered
+    limit = 15 #number top level comments gathered in each submission. by modifying this number we can increase or decrease the amount of comments gathered
     index = 0#create index to add limit to comment gathering. otherwise it takes too long
-    for submission in subreddit.search(text,limit=3):
+    for submission in subreddit.search(text,limit=3):#this limit is the number of submissions searched. this number also affects the amount of comments gathered.
       for top_level_comment in submission.comments:
-        if isinstance(top_level_comment, MoreComments):#skip over non-top level comments. the goal is to be somewhat relevant
+        if isinstance(top_level_comment, MoreComments):#skip over non-top level comments(replies to other comments). the goal is to be somewhat relevant
             continue
         index += 1 #add to index
-        comment_list.append(top_level_comment.body)#add comment bodies to a huge list of random comments
+        comment_list.append(top_level_comment.body)#add comment bodies to a list of all comments gathered.
         if index == limit:
             break
     answer = random.choice(comment_list)#returns a random comment from the search
