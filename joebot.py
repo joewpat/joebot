@@ -13,6 +13,7 @@ import sys
 import subprocess
 import json
 import discord
+import googleapiclient.discovery
 import praw
 from dotenv import load_dotenv
 from googlesearch import search
@@ -27,6 +28,7 @@ from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 from praw.models import MoreComments
 
+
 #connect to discord------------------------
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -39,8 +41,13 @@ REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
 REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT')
 reddit = praw.Reddit(user_agent=REDDIT_USER_AGENT,
                      client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+#connect to google-------------------------
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
+api_service_name = "youtube"
+api_version = "v3"
+DEVELOPER_KEY = os.getenv('YT_API_KEY')
 
-#functions---------------------------------
+#functions--------------------------------!
 #reddit content gatherer-------------------
 def reddit_comment_search(text):
     subreddit = reddit.subreddit("all")#use subreddit 'all' to cast a wide net
@@ -59,51 +66,40 @@ def reddit_comment_search(text):
     print(answer)#prints to console for logging purposes
     return answer
 
-
-def yt_comment_lookup(text):#finds a youtube comment based on a search using the text parameter
+def yt_video_search(text):#finds a youtube video based on text parameter. 
     query = urllib.parse.quote(text)
     url = "https://www.youtube.com/results?search_query=" + query
     response = urllib.request.urlopen(url)
     html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
-    url_list = ['https://www.youtube.com/watch?v=ythwlZ5yceI']#set a default video as the base url list for youtube in case nothing gets found
+    url_list = ['https://www.youtube.com/watch?v=ythwlZ5yceI']#seed it with a video URL in case it can't find one
     for vid in soup.findAll(attrs={'class':'yt-uix-tile-link'}):
         url = ('https://www.youtube.com' + vid['href'])
         url_list.append(url)
     yt_video_url = random.choice(url_list)
-    #run chromium as background task to pull comments
-    chrome_options = Options()  
-    chrome_options.add_argument("--headless")#opens chrome with no gui
-    chrome_options.add_argument("--no-sandbox")#not sure why I need this
-    chrome_options.add_argument("--disable-dev-shm-usage")#or this
-    comment_list = []#create empty comment list to add things to
-    print('attempting youtube lookup of search: ', text)
-    try:
-        with closing(Chrome(options=chrome_options)) as driver:
-            wait = WebDriverWait(driver,10)
-            driver.get(yt_video_url)
-            for item in range(3): #wait time for comment finding. larger numbers slow the bot down
-                wait.until(EC.visibility_of_element_located((By.TAG_NAME, "body"))).send_keys(Keys.END)
-                print(item+1, "seconds waited for content")
-                time.sleep(1)
-            print('page content loaded')
-            print('attempting to load comments...')
-            n = 0
-            for comment in wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "#comment #content-text"))):
-                n+=1
-                comment_list.append(comment.text)
-            print(n, 'comments found via CSS selector')
-            t = random.choice(comment_list)
-            print(t)
-        return t
-    except:
-        t = generate_asip_quote()
-        return t        
+    yt_video_id = yt_video_url[9:]#filter out first part of link text.
+    return yt_video_id
 
-def generate_meme():
-    pass
+def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parameter
+    comment_list = []#initialize empty list of comments
+    youtube = googleapiclient.discovery.build(
+    api_service_name, api_version, developerKey = DEVELOPER_KEY)
+    request = youtube.commentThreads().list(
+        part="snippet,replies",
+        videoId=yt_video_id
+    )
+    comment_dict = request.execute()#pulls a big dict of comments
+    for i in comment_dict['items']:#loop through the items in the comment dict to get just comments
+        comment = i['snippet']['topLevelComment']['snippet']['textOriginal']
+        comment_list.append(comment)
+    yt_comment = random.choice(comment_list)
+    print('youtube comment found: '+x)
+    return yt_comment
 
-
+def yt_comment_generator(text):#combine the youtube video and comment search functions to pull a random YT comment from text
+    yt_video_id = yt_video_search(text)
+    yt_comment = yt_comment_search(yt_video_id)
+    return yt_comment
 
 
 def google_search(text):#google search
@@ -115,7 +111,6 @@ def google_search(text):#google search
         return final_resp + l
     
 
-
 def generate_asip_quote():
     r = requests.get('http://sunnyquotes.net/q.php?random')
     z = r.json()['sqQuote']
@@ -123,16 +118,15 @@ def generate_asip_quote():
     return y
 
 def generate_response(text):
-    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex
+    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex before passing it to any other functions
     if textToSearch == "hi":
         return 'hi'
     elif textToSearch.startswith('find'):
         response = google_search(text)
         return response        
-    else:
-        #decide if it will be reddit or youtube
+    else:#decide the source of reply from the various sources
         response = []#create a list of final respnses to choose from
-        #response.append(yt_comment_lookup(text)) disabled youtube until I can quickify it
+        response.append(yt_comment_generator(text))
         response.append(reddit_comment_search(text))
         response.append(generate_asip_quote())
         return random.choice(response)
