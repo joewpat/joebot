@@ -54,7 +54,7 @@ def reddit_comment_search(text):
     comment_list = []#create empty comment list
     limit = 15 #number top level comments gathered in each submission. by modifying this number we can increase or decrease the amount of comments gathered
     index = 0#create index to add limit to comment gathering. otherwise it takes too long
-    for submission in subreddit.search(text,limit=3):#this limit is the number of submissions searched. this number also affects the amount of comments gathered.
+    for submission in subreddit.search(text,limit=5):#this limit is the number of submissions searched. this number also affects the amount of comments gathered.
       for top_level_comment in submission.comments:
         if isinstance(top_level_comment, MoreComments):#skip over non-top level comments(replies to other comments). the goal is to be somewhat relevant
             continue
@@ -72,11 +72,11 @@ def yt_video_search(text):#finds a youtube video based on text parameter.
     response = urllib.request.urlopen(url)
     html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
-    url_list = ['https://www.youtube.com/watch?v=ythwlZ5yceI']#seed it with a video URL in case it can't find one
+    video_id_list = ['123456789ythwlZ5yceI']#seed it with a video URL in case it can't find one
     for vid in soup.findAll(attrs={'class':'yt-uix-tile-link'}):
-        url = ('https://www.youtube.com' + vid['href'])
-        url_list.append(url)
-    yt_video_url = random.choice(url_list)
+        url = vid['href']
+        video_id_list.append(url)
+    yt_video_url = random.choice(video_id_list)
     yt_video_id = yt_video_url[9:]#filter out first part of link text.
     return yt_video_id
 
@@ -88,19 +88,21 @@ def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parame
         part="snippet,replies",
         videoId=yt_video_id
     )
-    comment_dict = request.execute()#pulls a big dict of comments
+    try:
+        comment_dict = request.execute()#pulls a big dict of comments
+    except:
+        return 'fix me joe'
     for i in comment_dict['items']:#loop through the items in the comment dict to get just comments
         comment = i['snippet']['topLevelComment']['snippet']['textOriginal']
         comment_list.append(comment)
     yt_comment = random.choice(comment_list)
-    print('youtube comment found: '+x)
+    print('youtube comment found: '+yt_comment)
     return yt_comment
 
 def yt_comment_generator(text):#combine the youtube video and comment search functions to pull a random YT comment from text
     yt_video_id = yt_video_search(text)
     yt_comment = yt_comment_search(yt_video_id)
     return yt_comment
-
 
 def google_search(text):#google search
         #query = command.split(' ', 1)[1]#strip the command word out of the query
@@ -110,7 +112,6 @@ def google_search(text):#google search
         final_resp = "My first search result for " + text + ": \n"
         return final_resp + l
     
-
 def generate_asip_quote():
     r = requests.get('http://sunnyquotes.net/q.php?random')
     z = r.json()['sqQuote']
@@ -139,8 +140,9 @@ if __name__ == "__main__":
     @client.event
     async def on_message(message):
         if message.content.startswith('jb '):
+            response = generate_response(message.content[3:])
             async with message.channel.typing():
-                response = generate_response(message.content[3:])
+                await time.sleep(3)
                 await message.channel.send(response)
         elif message.content == 'raise-exception':
             raise discord.DiscordException
