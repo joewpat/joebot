@@ -129,7 +129,7 @@ def generate_response(text):
         response = []#create a list of final respnses to choose from
         response.append(yt_comment_generator(text))
         response.append(reddit_comment_search(text))
-        response.append(generate_asip_quote())
+        #response.append(generate_asip_quote())
         return random.choice(response)
 
 #main
@@ -140,9 +140,8 @@ if __name__ == "__main__":
     @client.event
     async def on_message(message):
         if message.content.startswith('jb '):
-            response = generate_response(message.content[3:])
             async with message.channel.typing():
-                await time.sleep(3)
+                response = generate_response(message.content[3:])
                 await message.channel.send(response)
         elif message.content == 'raise-exception':
             raise discord.DiscordException
