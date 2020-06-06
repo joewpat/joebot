@@ -50,18 +50,20 @@ DEVELOPER_KEY = os.getenv('YT_API_KEY')
 #functions--------------------------------!
 #reddit content gatherer-------------------
 def reddit_comment_search(text):
-    subreddit = reddit.subreddit("all")#use subreddit 'all' to cast a wide net
+    subreddit_list = ['all','gaming','gonewild','videos','pics'] 
     comment_list = []#create empty comment list
-    limit = 15 #number top level comments gathered in each submission. by modifying this number we can increase or decrease the amount of comments gathered
-    index = 0#create index to add limit to comment gathering. otherwise it takes too long
-    for submission in subreddit.search(text,limit=5):#this limit is the number of submissions searched. this number also affects the amount of comments gathered.
-      for top_level_comment in submission.comments:
-        if isinstance(top_level_comment, MoreComments):#skip over non-top level comments(replies to other comments). the goal is to be somewhat relevant
-            continue
-        index += 1 #add to index
-        comment_list.append(top_level_comment.body)#add comment bodies to a list of all comments gathered.
-        if index == limit:
-            break
+    for subreddit in subreddit_list:
+        subreddit = reddit.subreddit(subreddit)
+        limit = 5 #number top level comments gathered in each submission. by modifying this number we can increase or decrease the amount of comments gathered
+        index = 0#create index to add limit to comment gathering. otherwise it takes too long
+        for submission in subreddit.search(text,limit=2):#this limit is the number of submissions searched. this number also affects the amount of comments gathered.
+            for top_level_comment in submission.comments:
+                if isinstance(top_level_comment, MoreComments):#skip over non-top level comments(replies to other comments). the goal is to be somewhat relevant
+                    continue
+                index += 1 #add to index
+                comment_list.append(top_level_comment.body)#add comment bodies to a list of all comments gathered.
+                if index == limit:
+                    break
     answer = random.choice(comment_list)#returns a random comment from the search
     print(answer)#prints to console for logging purposes
     return answer
