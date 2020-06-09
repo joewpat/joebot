@@ -164,7 +164,7 @@ if __name__ == "__main__":
     @client.event
     async def on_message(message):
         if message.content.startswith('jb '):
-                message.channel.send(generate_response(message.content[3:]))
+            message.channel.send(generate_response(message.content[3:]))
         else: #randomly say shit even if nobody mentions JoeBot by the jb prefix
             #super complex random calculation
             x1 = random.randint(1, 7)
