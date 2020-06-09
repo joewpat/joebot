@@ -18,5 +18,6 @@ RUN pip3 install --disable-pip-version-check discord
 RUN pip3 install --disable-pip-version-check python-dotenv
 RUN pip3 install --disable-pip-version-check praw
 RUN pip3 install --disable-pip-version-check google-api-python-client
+RUN pip3 install --disable-pip-version-check wikiquote
 #run the bot
 CMD [ "python3","-u","./joebot.py" ]

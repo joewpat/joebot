@@ -15,6 +15,7 @@ import json
 import discord
 import googleapiclient.discovery
 import praw
+import wikiquote
 from dotenv import load_dotenv
 from googlesearch import search
 from selenium.webdriver import Chrome
@@ -54,7 +55,7 @@ def reddit_comment_search(text):
     comment_list = []#create empty comment list
     for subreddit in subreddit_list:
         subreddit = reddit.subreddit(subreddit)
-        limit = 5 #number top level comments gathered in each submission. by modifying this number we can increase or decrease the amount of comments gathered
+        limit = 10 #number top level comments gathered in each submission. by modifying this number we can increase or decrease the amount of comments gathered
         index = 0#create index to add limit to comment gathering. otherwise it takes too long
         for submission in subreddit.search(text,limit=2):#this limit is the number of submissions searched. this number also affects the amount of comments gathered.
             for top_level_comment in submission.comments:
@@ -64,9 +65,13 @@ def reddit_comment_search(text):
                 comment_list.append(top_level_comment.body)#add comment bodies to a list of all comments gathered.
                 if index == limit:
                     break
-    answer = random.choice(comment_list)#returns a random comment from the search
-    print(answer)#prints to console for logging purposes
-    return answer
+    if not comment_list:
+        x = generate_random_quote()
+        return x
+    else:
+        answer = random.choice(comment_list)#returns a random comment from the search
+        print(answer)#prints to console for logging purposes
+        return answer
 
 def yt_video_search(text):#finds a youtube video based on text parameter. 
     query = urllib.parse.quote(text)
@@ -93,7 +98,7 @@ def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parame
     try:
         comment_dict = request.execute()#pulls a big dict of comments
     except:
-        return 'fix me joe'
+        return 'youtube error - fix me daddy'
     for i in comment_dict['items']:#loop through the items in the comment dict to get just comments
         comment = i['snippet']['topLevelComment']['snippet']['textOriginal']
         comment_list.append(comment)
@@ -120,6 +125,15 @@ def generate_asip_quote():
     y = str(z)
     return y
 
+def generate_random_quote():
+    quotes = []#create empty quotes list
+    for t in wikiquote.random_titles():
+        quotes.append(wikiquote.quotes(t))
+    quotes.append(generate_asip_quote())
+    quotes.append(wikiquote.quotes('King of the Hill (season 2)'))
+    return quotes        
+
+
 def generate_response(text):
     textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex before passing it to any other functions
     if textToSearch == "hi":
@@ -131,8 +145,16 @@ def generate_response(text):
         response = []#create a list of final respnses to choose from
         response.append(yt_comment_generator(text))
         response.append(reddit_comment_search(text))
-        #response.append(generate_asip_quote())
-        return random.choice(response)
+        #every once in a while add some super random stuff
+        x1 = random.randint(1, 7)
+        x2 = random.randint(1, 7)
+        if x1 == x2:
+            response.append(generate_random_quote())
+        try:
+            r = random.choice(response)
+            return r
+        except:
+            return generate_random_quote()
 
 #main
 if __name__ == "__main__":
@@ -142,10 +164,13 @@ if __name__ == "__main__":
     @client.event
     async def on_message(message):
         if message.content.startswith('jb '):
-            async with message.channel.typing():
-                response = generate_response(message.content[3:])
-                await message.channel.send(response)
-        elif message.content == 'raise-exception':
-            raise discord.DiscordException
+                message.channel.send(generate_response(message.content[3:]))
+        else: #randomly say shit even if nobody mentions JoeBot by the jb prefix
+            #super complex random calculation
+            x1 = random.randint(1, 7)
+            x2 = random.randint(1, 7)
+            if x1 == x2:
+                print('random chat triggered')
+                message.channel.send(generate_response(message.content))
     client.run(TOKEN)
 #runs the thing
