@@ -79,7 +79,7 @@ def yt_video_search(text):#finds a youtube video based on text parameter.
     response = urllib.request.urlopen(url)
     html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
-    video_id_list = ['123456789ythwlZ5yceI']#seed it with a video URL in case it can't find one
+    video_id_list = ['123456789SJ_u40yfQdY']#seed it with a video URL in case it can't find one
     for vid in soup.findAll(attrs={'class':'yt-uix-tile-link'}):
         url = vid['href']
         video_id_list.append(url)
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     @client.event
     async def on_message(message):
         if message.content.startswith('jb '):
-            message.channel.send(generate_response(message.content[3:]))
+            await message.channel.send(generate_response(message.content[3:]))
         else: #randomly say shit even if nobody mentions JoeBot by the jb prefix
             #super complex random calculation
             x1 = random.randint(1, 7)
