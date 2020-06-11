@@ -16,6 +16,7 @@ import discord
 import googleapiclient.discovery
 import praw
 import wikiquote
+import asyncio
 from dotenv import load_dotenv
 from googlesearch import search
 from selenium.webdriver import Chrome
@@ -65,7 +66,7 @@ def reddit_comment_search(text):
                 comment_list.append(top_level_comment.body)#add comment bodies to a list of all comments gathered.
                 if index == limit:
                     break
-    if not comment_list:
+    if not comment_list: #if it doesn't find anything on reddit, pull from another source
         x = generate_random_quote()
         return x
     else:
@@ -146,10 +147,6 @@ def generate_response(text):
         response.append(yt_comment_generator(text))
         response.append(reddit_comment_search(text))
         #every once in a while add some super random stuff
-        x1 = random.randint(1, 7)
-        x2 = random.randint(1, 7)
-        if x1 == x2:
-            response.append(generate_random_quote())
         try:
             r = random.choice(response)
             return r
@@ -164,6 +161,8 @@ if __name__ == "__main__":
     @client.event
     async def on_message(message):
         if message.content.startswith('jb '):
+            async with message.channel.typing():
+                await asyncio.sleep(4)
             await message.channel.send(generate_response(message.content[3:]))
         else: #randomly say shit even if nobody mentions JoeBot by the jb prefix
             #super complex random calculation
@@ -171,6 +170,6 @@ if __name__ == "__main__":
             x2 = random.randint(1, 7)
             if x1 == x2:
                 print('random chat triggered')
-                message.channel.send(generate_response(message.content))
+                await message.channel.send(generate_response(message.content))
     client.run(TOKEN)
 #runs the thing
