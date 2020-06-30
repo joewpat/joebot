@@ -133,6 +133,13 @@ def generate_random_quote():
     quotes.append(wikiquote.quotes('King of the Hill (season 2)'))
     return quotes        
 
+def flow_control():#change the name
+    #helps keep his random chat at a reasonable level
+    maxrange = 10#max range for random calculations. larger number = less frequent random commenting
+    x1 = random.randint(1, maxrange)
+    x2 = random.randint(1, maxrange)
+    
+
 
 def generate_response(text):
     textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex before passing it to any other functions
