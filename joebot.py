@@ -134,10 +134,12 @@ def generate_random_quote():
     return quotes        
 
 def flow_control():#change the name
-    #helps keep his random chat at a reasonable level
-    maxrange = 10#max range for random calculations. larger number = less frequent random commenting
+    #helps keep bot's random chat at a reasonable level
+    maxrange = 10   #max range for random calculations. larger number = less frequent random commenting
     x1 = random.randint(1, maxrange)
     x2 = random.randint(1, maxrange)
+        if x1 == x2:
+            
     
 
 
@@ -159,7 +161,7 @@ def generate_response(text):
             response.append(generate_random_quote())
         try:
             r = random.choice(response)
-            return r
+            return r[0:140]
         except:
             return generate_random_quote()
 
