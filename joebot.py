@@ -138,7 +138,7 @@ def flow_control():#change the name
     maxrange = 10   #max range for random calculations. larger number = less frequent random commenting
     x1 = random.randint(1, maxrange)
     x2 = random.randint(1, maxrange)
-        if x1 == x2:
+        #if x1 == x2:
             
     
 
