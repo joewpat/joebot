@@ -75,7 +75,7 @@ def reddit_comment_search(text):
 
 def yt_video_search(text):#finds a youtube video based on text parameter. 
     query = urllib.parse.quote(text)
-    url = "https://www.youtube.com/results?search_query=" + text
+    url = "https://www.youtube.com/results?search_query=" + query
     response = urllib.request.urlopen(url)
     html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
@@ -85,7 +85,7 @@ def yt_video_search(text):#finds a youtube video based on text parameter.
         video_id_list.append(url)
     if not video_id_list:
         print('no videos found for search ' +text)
-        break
+        return '...'
     else:    
         yt_video_url = random.choice(video_id_list)
         yt_video_id = yt_video_url[9:]#filter out first part of link text.
@@ -102,7 +102,7 @@ def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parame
     try:
         comment_dict = request.execute()#pulls a big dict of comments
     except:
-        
+        x = generate_asip_quote()
         return x
     for i in comment_dict['items']:#loop through the items in the comment dict to get just comments
         comment = i['snippet']['topLevelComment']['snippet']['textOriginal']
