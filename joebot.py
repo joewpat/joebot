@@ -70,22 +70,26 @@ def reddit_comment_search(text):
         return x
     else:
         answer = random.choice(comment_list)#returns a random comment from the search
-        print(answer)#prints to console for logging purposes
+        print('reddit comment found: '+answer)#prints to console for logging purposes
         return answer
 
 def yt_video_search(text):#finds a youtube video based on text parameter. 
     query = urllib.parse.quote(text)
-    url = "https://www.youtube.com/results?search_query=" + query
+    url = "https://www.youtube.com/results?search_query=" + text
     response = urllib.request.urlopen(url)
     html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
-    video_id_list = ['123456789SJ_u40yfQdY']#seed it with a video URL in case it can't find one
+    video_id_list = []#create videoID array
     for vid in soup.findAll(attrs={'class':'yt-uix-tile-link'}):
         url = vid['href']
         video_id_list.append(url)
-    yt_video_url = random.choice(video_id_list)
-    yt_video_id = yt_video_url[9:]#filter out first part of link text.
-    return yt_video_id
+    if not video_id_list:
+        print('no videos found for search ' +text)
+        break
+    else:    
+        yt_video_url = random.choice(video_id_list)
+        yt_video_id = yt_video_url[9:]#filter out first part of link text.
+        return yt_video_id
 
 def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parameter
     comment_list = []#initialize empty list of comments
@@ -98,7 +102,8 @@ def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parame
     try:
         comment_dict = request.execute()#pulls a big dict of comments
     except:
-        return 'youtube error - fix me daddy'
+        
+        return x
     for i in comment_dict['items']:#loop through the items in the comment dict to get just comments
         comment = i['snippet']['topLevelComment']['snippet']['textOriginal']
         comment_list.append(comment)
@@ -139,9 +144,6 @@ def flow_control():#change the name
     x1 = random.randint(1, maxrange)
     x2 = random.randint(1, maxrange)
         #if x1 == x2:
-            
-    
-
 
 def generate_response(text):
     textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex before passing it to any other functions
