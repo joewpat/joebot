@@ -18,14 +18,7 @@ import praw
 import wikiquote
 from dotenv import load_dotenv
 from googlesearch import search
-from selenium.webdriver import Chrome
 from contextlib import closing
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 from praw.models import MoreComments
 
@@ -146,7 +139,7 @@ def flow_control():#change the name
         #if x1 == x2:
 
 def generate_response(text):
-    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex before passing it to any other functions
+    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input before passing it to any other functions
     if textToSearch == "hi":
         return 'hi'
     elif textToSearch.startswith('find'):
