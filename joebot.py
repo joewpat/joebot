@@ -35,12 +35,12 @@ REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
 REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT')
 reddit = praw.Reddit(user_agent=REDDIT_USER_AGENT,
                      client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-#connect to google-------------------------
+#connect to youtube-------------------------
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
 api_service_name = "youtube"
 api_version = "v3"
 DEVELOPER_KEY = os.getenv('YT_API_KEY')
-
+youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey = DEVELOPER_KEY)
 #functions--------------------------------!
 #reddit content gatherer-------------------
 def reddit_comment_search(text):
@@ -67,21 +67,23 @@ def reddit_comment_search(text):
         return answer
 
 def yt_video_search(text):#finds a youtube video based on text parameter. 
-    query = urllib.parse.quote(text)
-    url = "https://www.youtube.com/results?search_query=" + query
-    response = urllib.request.urlopen(url)
-    html = response.read()
-    soup = BeautifulSoup(html, 'html.parser')
-    video_id_list = []#create videoID array
-    for vid in soup.findAll(attrs={'class':'yt-uix-tile-link'}):
-        url = vid['href']
-        video_id_list.append(url)
-    if not video_id_list:
+    request = youtube.search().list(
+    part="snippet",
+    maxResults=25,
+    q=text
+    )
+    vidUrls = []
+    response = request.execute()
+    for vid in response['items']:
+        if 'youtube#video' == vid['id']['kind']:
+            vidUrls.append(vid['id']['videoId'])
+    print(str(len(vidUrls)) +' videos found for search '+text)
+    if not vidUrls:
         print('no videos found for search ' +text)
         return '...'
     else:    
-        yt_video_url = random.choice(video_id_list)
-        yt_video_id = yt_video_url[9:]#filter out first part of link text.
+        yt_video_id = random.choice(vidUrls)
+        print('selected video ID '+ yt_video_id)
         return yt_video_id
 
 def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parameter
@@ -92,11 +94,11 @@ def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parame
         part="snippet,replies",
         videoId=yt_video_id
     )
-    try:
+    try: #TODO - this try/except is not right - the random.choice is where the fault lies
         comment_dict = request.execute()#pulls a big dict of comments
     except:
-        x = generate_asip_quote()
-        return x
+        print('unable to find comment from video ID' + yt_video_id)
+        return '...'
     for i in comment_dict['items']:#loop through the items in the comment dict to get just comments
         comment = i['snippet']['topLevelComment']['snippet']['textOriginal']
         comment_list.append(comment)
