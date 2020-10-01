@@ -19,14 +19,7 @@ import wikiquote
 import asyncio
 from dotenv import load_dotenv
 from googlesearch import search
-from selenium.webdriver import Chrome
 from contextlib import closing
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 from praw.models import MoreComments
 
@@ -43,12 +36,12 @@ REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
 REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT')
 reddit = praw.Reddit(user_agent=REDDIT_USER_AGENT,
                      client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-#connect to google-------------------------
+#connect to youtube-------------------------
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
 api_service_name = "youtube"
 api_version = "v3"
 DEVELOPER_KEY = os.getenv('YT_API_KEY')
-
+youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey = DEVELOPER_KEY)
 #functions--------------------------------!
 #reddit content gatherer-------------------
 def reddit_comment_search(text):
@@ -71,22 +64,28 @@ def reddit_comment_search(text):
         return x
     else:
         answer = random.choice(comment_list)#returns a random comment from the search
-        print(answer)#prints to console for logging purposes
+        print('reddit comment found: '+answer)#prints to console for logging purposes
         return answer
 
 def yt_video_search(text):#finds a youtube video based on text parameter. 
-    query = urllib.parse.quote(text)
-    url = "https://www.youtube.com/results?search_query=" + query
-    response = urllib.request.urlopen(url)
-    html = response.read()
-    soup = BeautifulSoup(html, 'html.parser')
-    video_id_list = ['123456789SJ_u40yfQdY']#seed it with a video URL in case it can't find one
-    for vid in soup.findAll(attrs={'class':'yt-uix-tile-link'}):
-        url = vid['href']
-        video_id_list.append(url)
-    yt_video_url = random.choice(video_id_list)
-    yt_video_id = yt_video_url[9:]#filter out first part of link text.
-    return yt_video_id
+    request = youtube.search().list(
+    part="snippet",
+    maxResults=25,
+    q=text
+    )
+    vidUrls = []
+    response = request.execute()
+    for vid in response['items']:
+        if 'youtube#video' == vid['id']['kind']:
+            vidUrls.append(vid['id']['videoId'])
+    print(str(len(vidUrls)) +' videos found for search '+text)
+    if not vidUrls:
+        print('no videos found for search ' +text)
+        return '...'
+    else:    
+        yt_video_id = random.choice(vidUrls)
+        print('selected video ID '+ yt_video_id)
+        return yt_video_id
 
 def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parameter
     comment_list = []#initialize empty list of comments
@@ -96,10 +95,11 @@ def yt_comment_search(yt_video_id):#pulls a comment from youtube video ID parame
         part="snippet,replies",
         videoId=yt_video_id
     )
-    try:
+    try: #TODO - this try/except is not right - the random.choice is where the fault lies
         comment_dict = request.execute()#pulls a big dict of comments
     except:
-        return 'youtube error - fix me daddy'
+        print('unable to find comment from video ID' + yt_video_id)
+        return '...'
     for i in comment_dict['items']:#loop through the items in the comment dict to get just comments
         comment = i['snippet']['topLevelComment']['snippet']['textOriginal']
         comment_list.append(comment)
@@ -134,9 +134,15 @@ def generate_random_quote():
     quotes.append(wikiquote.quotes('King of the Hill (season 2)'))
     return quotes        
 
+def flow_control():#change the name
+    #helps keep bot's random chat at a reasonable level
+    maxrange = 10   #max range for random calculations. larger number = less frequent random commenting
+    x1 = random.randint(1, maxrange)
+    x2 = random.randint(1, maxrange)
+        #if x1 == x2:
 
 def generate_response(text):
-    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input using regex before passing it to any other functions
+    textToSearch = re.sub('[^A-Za-z0-9]+', ' ', text)#sanitize input before passing it to any other functions
     if textToSearch == "hi":
         return 'hi'
     elif textToSearch.startswith('find'):
@@ -149,7 +155,7 @@ def generate_response(text):
         #every once in a while add some super random stuff
         try:
             r = random.choice(response)
-            return r
+            return r[0:140]
         except:
             return generate_random_quote()
 
