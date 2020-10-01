@@ -22,7 +22,6 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 from praw.models import MoreComments
 
-
 #connect to discord------------------------
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
